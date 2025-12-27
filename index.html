@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Word Hunter Ultimate</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --accent: #8b5cf6;
+            --bg-gradient: linear-gradient(135deg, #4c1d95 0%, #3b82f6 100%);
+            --surface: #ffffff;
+            --surface-highlight: #f3f4f6;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --hint-color: #fbbf24;
+            --magic: #ec4899;
+            --selected: #a5b4fc;
+            --border-radius: 16px;
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            height: 95vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* --- Screens Animation & Scrolling --- */
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            animation: fadeIn 0.3s ease-out;
+            position: relative;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- Typography & Buttons --- */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-align: center;
+            background: -webkit-linear-gradient(var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button:active { transform: scale(0.95); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* --- Home Screen --- */
+        #home-screen {
+            padding: 2rem;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hero-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .home-btn {
+            width: 100%;
+            padding: 1.2rem;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .btn-start { background: linear-gradient(to right, var(--primary), var(--accent)); }
+        .btn-custom { background: white; color: var(--primary); border: 2px solid var(--primary); }
+
+        /* --- Customize Screen --- */
+        #customize-screen { padding: 2rem; background: #f8fafc; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--text-light); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        
+        select, input[type="text"] {
+            width: 100%; padding: 1rem;
+            border: 2px solid #e2e8f0; border-radius: 12px;
+            font-size: 1rem; outline: none; background: white;
+            font-weight: 600;
+        }
+        select:focus, input:focus { border-color: var(--primary); }
+
+        /* AI Theme Section */
+        .ai-theme-box {
+            background: linear-gradient(to right, #fdf4ff, #faf5ff);
+            border: 2px solid var(--magic);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .ai-label {
+            color: var(--magic);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-magic {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.8rem;
+            background: var(--magic);
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        /* --- GAME SCREEN --- */
+        .game-header {
+            padding: 0.8rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr; /* Left, Center, Right */
+            align-items: center;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            z-index: 50;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .header-left { justify-self: start; }
+        .header-center { justify-self: center; text-align: center; }
+        .header-right { justify-self: end; }
+
+        .game-title-small {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+        }
+
+        .hint-badge {
+            background: #eff6ff;
+            color: var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .btn-home-icon {
+            background: #f3f4f6;
+            color: var(--text);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+        }
+
+        /* Grid Area */
+        .game-board-area {
+            flex: 0 0 auto;
+            padding: 1rem;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 2px;
+            padding: 4px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            touch-action: none;
+            width: 100%;
+            aspect-ratio: 1;
+            max-width: 400px;
+        }
+
+        .cell {
+            background-color: #f1f5f9;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--text);
+            font-size: clamp(0.7rem, 3.5vw, 1.2rem);
+            transition: background 0.1s;
+        }
+        
+        .cell.selected { background-color: var(--selected); color: var(--primary-dark); transform: scale(0.95); border-radius: 50%; }
+        .cell.found { background-color: var(--success); color: white; animation: popIn 0.3s; }
+        .cell.hint-flash { animation: flash 1.5s infinite; background-color: var(--hint-color); color: white; }
+
+        /* Word Panel */
+        .word-panel {
+            flex: 1;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            z-index: 5;
+            min-height: max-content; 
+            padding-bottom: 2rem;
+        }
+
+        .panel-header {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            margin-bottom: 0.8rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .word-grid {
+            display: flex;
+            flex-wrap: wrap; /* Horizontal format */
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+
+        .word-chip {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 0.8rem;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .word-chip.found {
+            background-color: #dcfce7;
+            color: #166534;
+            border-color: #dcfce7;
+        }
+        
+        .word-chip.found::before {
+            content: '✓';
+            margin-right: 4px;
+            font-weight: bold;
+        }
+
+        /* Inline Action Bar */
+        .panel-controls {
+            display: flex;
+            gap: 0.8rem;
+            padding-top: 1rem;
+            margin-top: auto;
+            border-top: 1px solid #f3f4f6;
+            width: 100%;
+        }
+
+        .btn-action {
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            flex: 1;
+        }
+
+        .btn-hint {
+            background: linear-gradient(to right, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .btn-watch-ad {
+            background: linear-gradient(to right, #8b5cf6, #6366f1) !important;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        
+        .btn-ai-hint {
+            background: linear-gradient(to right, #ec4899, #be185d);
+            color: white;
+        }
+
+        .btn-exit {
+            flex: 0 0 auto;
+            padding-left: 1.2rem;
+            padding-right: 1.2rem;
+            background: white;
+            color: #ef4444;
+            border: 1px solid #fee2e2;
+        }
+
+        /* --- Modals & Overlays --- */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white; padding: 2rem; width: 85%;
+            border-radius: 24px; text-align: center;
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* AD OVERLAY (Simulated) */
+        .ad-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: #000;
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .ad-timer-pill {
+            position: absolute; top: 1rem; right: 1rem;
+            background: rgba(50,50,50,0.8);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .ad-label {
+            position: absolute; top: 1rem; left: 1rem;
+            background: #f59e0b;
+            color: black;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .ad-content-box {
+            width: 90%;
+            aspect-ratio: 16/9;
+            background: #1f2937;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #374151;
+        }
+        
+        .ad-spinner {
+            width: 30px; height: 30px; border: 3px solid #555;
+            border-top: 3px solid #fff; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 1rem;
+        }
+
+        @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes popIn { 0% { transform: scale(0.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- SCREEN 1: HOME -->
+    <div id="home-screen" class="screen active">
+        <div class="hero-icon">🧩</div>
+        <h1>Word Hunter<br><span style="font-size: 1.5rem; font-weight: 400; color: var(--text-light);">Ultimate Edition</span></h1>
+        
+        <div style="width: 100%; padding-top: 2rem;">
+            <button class="home-btn btn-start" onclick="startGame('default')">
+                START NEW GAME
+            </button>
+            <button class="home-btn btn-custom" onclick="showScreen('customize-screen')">
+                CUSTOMIZE GAME
+            </button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: CUSTOMIZE -->
+    <div id="customize-screen" class="screen">
+        <div class="game-header">
+            <div class="header-left"></div>
+            <div class="header-center"><span class="game-title-small">Setup</span></div>
+            <div class="header-right"><button class="btn-home-icon" onclick="showScreen('home-screen')">✕</button></div>
+        </div>
+        
+        <div style="flex: 1; padding-top: 1rem; overflow-y: auto;">
+            
+            <!-- AI Section -->
+            <div class="ai-theme-box">
+                <label class="ai-label">✨ AI Mode: Theme Generator</label>
+                <input type="text" id="ai-topic-input" placeholder="e.g. Space Pirates, 90s Cartoons...">
+                <button class="btn-magic" onclick="createAITheme()">Generate Words ✨</button>
+            </div>
+
+            <div class="form-group">
+                <label>Or Choose Standard Theme</label>
+                <select id="opt-theme">
+                    <option value="random">🎲 Random Mix</option>
+                    <option value="programming">💻 Programming</option>
+                    <option value="food">🍔 Food</option>
+                    <option value="countries">🌍 Countries</option>
+                    <option value="animals">🦁 Animals</option>
+                    <option value="sports">⚽ Sports</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Grid Size</label>
+                    <select id="opt-difficulty">
+                        <option value="8">Easy (8x8)</option>
+                        <option value="12" selected>Medium (12x12)</option>
+                        <option value="15">Hard (15x15)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Word Count</label>
+                    <select id="opt-wordcount">
+                        <option value="8">8 Words</option>
+                        <option value="12" selected>12 Words</option>
+                        <option value="15">15 Words</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button class="home-btn btn-start" style="margin-bottom: 1rem;" onclick="startGame('standard')">START GAME</button>
+    </div>
+
+    <!-- SCREEN 3: GAME SCREEN -->
+    <div id="game-screen" class="screen">
+        <!-- Header -->
+        <div class="game-header">
+            <div class="header-left">
+                <div class="hint-badge">💡 <span id="hints-val">3</span></div>
+            </div>
+            <div class="header-center">
+                <span class="game-title-small" id="game-title-display">WORD HUNTER</span>
+            </div>
+            <div class="header-right">
+                <button class="btn-home-icon" onclick="confirmExit()">🏠</button>
+            </div>
+        </div>
+
+        <!-- Board -->
+        <div class="game-board-area">
+            <div id="grid-container" class="grid-container">
+                <!-- JS injects grid here -->
+            </div>
+        </div>
+
+        <!-- Words Panel -->
+        <div class="word-panel">
+            <div class="panel-header">
+                <span>Find these words:</span>
+                <span id="progress-text">0/12</span>
+            </div>
+            
+            <div id="word-grid" class="word-grid">
+                <!-- JS injects word chips here -->
+            </div>
+            
+            <!-- Controls -->
+            <div class="panel-controls">
+                <button class="btn-action btn-exit" onclick="confirmExit()">Exit</button>
+                <button class="btn-action btn-hint" id="btn-hint" onclick="useHint()">
+                    Hint
+                </button>
+                <button class="btn-action btn-ai-hint" onclick="useAIHint()">
+                    Ask AI ✨
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL OVERLAY -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <div id="loading-spinner" class="spinner" style="display: none;"></div>
+            <h2 id="modal-title" style="margin-bottom: 0.5rem; font-size: 1.5rem;">Paused</h2>
+            <p id="modal-msg" style="color: var(--text-light); margin-bottom: 1.5rem; line-height: 1.5;">...</p>
+            <div id="modal-actions" style="display: flex; gap: 1rem; justify-content: center;">
+                <!-- JS injects buttons -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- MOCK AD OVERLAY -->
+    <div id="ad-overlay" class="ad-overlay">
+        <div class="ad-label">Ad</div>
+        <div class="ad-timer-pill" id="ad-timer">Reward in 5s</div>
+        
+        <div class="ad-content-box">
+            <div class="ad-spinner"></div>
+            <div style="font-weight: bold; color: #9ca3af;">Amazing Game Ad</div>
+            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem;">Simulating Video...</div>
+        </div>
+        
+        <p style="color: #9ca3af; font-size: 0.9rem;">Watching this supports the developer!</p>
+    </div>
+
+</div>
+
+<script>
+    const apiKey = ""; // Injected by environment
+    
+    // --- CONFIG & DATA ---
+    const WORD_POOLS = {
+        programming: ["PYTHON", "JAVA", "HTML", "CSS", "REACT", "NODE", "LINUX", "CODE", "DATA", "API", "BUG", "LOOP", "GIT", "STACK", "WIFI"],
+        food: ["PIZZA", "SUSHI", "TACO", "PASTA", "BREAD", "CAKE", "FRUIT", "HONEY", "RICE", "SOUP", "EGG", "MILK", "CORN", "BEEF", "KIWI"],
+        countries: ["USA", "INDIA", "CHINA", "JAPAN", "PERU", "ITALY", "SPAIN", "CHILE", "IRAN", "CUBA", "FIJI", "MALI", "OMAN", "LAOS", "CHAD"],
+        animals: ["LION", "TIGER", "BEAR", "WOLF", "ZEBRA", "SNAKE", "EAGLE", "FROG", "DEER", "CAT", "DOG", "FOX", "OWL", "FISH", "WORM"],
+        sports: ["SOCCER", "TENNIS", "GOLF", "RUGBY", "BOXING", "JUDO", "SWIM", "RACE", "DIVE", "HIKE", "YOGA", "GYM", "RUN", "JUMP", "KICK"]
+    };
+
+    // --- STATE MANAGEMENT ---
+    let gameState = {
+        gridSize: 12,
+        wordCount: 12,
+        theme: 'random',
+        currentThemeName: 'Word Hunter',
+        grid: [],
+        words: [], 
+        hints: 3,
+        isSelecting: false,
+        selectionStart: null,
+        selectionEnd: null,
+        foundCount: 0
+    };
+
+    // --- HELPER: GEMINI API CALL ---
+    async function callGemini(prompt) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        const payload = {
+            contents: [{ parts: [{ text: prompt }] }]
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("API Error");
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
+    }
+
+    // --- AI FEATURES ---
+
+    async function createAITheme() {
+        const topic = document.getElementById('ai-topic-input').value.trim();
+        if (!topic) {
+            showModal("Oops", "Please enter a topic first!", false);
+            return;
+        }
+
+        showLoading("Conjuring words...");
+
+        // Get settings
+        const size = parseInt(document.getElementById('opt-difficulty').value);
+        const count = parseInt(document.getElementById('opt-wordcount').value);
+        
+        const prompt = `Generate a JSON array of ${count} unique, single-word nouns related to the topic "${topic}". 
+        Rules:
+        1. Uppercase only.
+        2. No spaces or special characters.
+        3. Minimum length 3.
+        4. Maximum length ${size}.
+        5. Return ONLY the JSON array, no markdown formatting.`;
+
+        try {
+            let text = await callGemini(prompt);
+            if (!text) throw new Error("No response");
+            
+            // Clean up markdown if present
+            text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            
+            const words = JSON.parse(text);
+            
+            if (Array.isArray(words) && words.length > 0) {
+                gameState.currentThemeName = topic.toUpperCase();
+                startGame('ai-generated', words);
+            } else {
+                throw new Error("Invalid format");
+            }
+        } catch (e) {
+            hideModal();
+            showModal("AI Error", "Could not generate theme. Try a different topic!", false);
+        }
+    }
+
+    async function useAIHint() {
+        const hiddenWord = gameState.words.find(w => !w.found);
+        if (!hiddenWord) return;
+
+        showLoading("Asking the Oracle...");
+
+        const prompt = `The user is playing a word search game. The hidden word is "${hiddenWord.word}". The theme is "${gameState.currentThemeName}". 
+        Provide a short, clever, crossword-style clue or riddle for this word. 
+        IMPORTANT: Do NOT include the word "${hiddenWord.word}" in the clue itself. Keep it under 20 words.`;
+
+        const clue = await callGemini(prompt);
+        
+        hideModal();
+        if (clue) {
+            showModal("🧠 Smart Hint", clue, false);
+        } else {
+            showModal("Error", " The Oracle is silent.", false);
+        }
+    }
+
+    // --- NAVIGATION ---
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        hideModal();
+    }
+
+    function confirmExit() {
+        showModal("Exit Game?", "You will lose your progress.", true, () => showScreen('home-screen'));
+    }
+
+    function hideModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+        document.getElementById('loading-spinner').style.display = 'none';
+    }
+
+    function showLoading(msg) {
+        document.getElementById('modal-title').innerText = "Please Wait";
+        document.getElementById('modal-msg').innerText = msg;
+        document.getElementById('modal-actions').innerHTML = '';
+        document.getElementById('loading-spinner').style.display = 'block';
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function showModal(title, msg, isConfirm, onYes) {
+        document.getElementById('loading-spinner').style.display = 'none';
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-msg').innerText = msg;
+        const actions = document.getElementById('modal-actions');
+        actions.innerHTML = '';
+
+        if(isConfirm) {
+            const yes = document.createElement('button');
+            yes.className = 'btn-action btn-hint';
+            yes.style.background = '#ef4444';
+            yes.innerText = "Yes, Quit";
+            yes.onclick = onYes;
+            
+            const no = document.createElement('button');
+            no.className = 'btn-action btn-exit';
+            no.style.border = '1px solid #ddd';
+            no.innerText = "Cancel";
+            no.onclick = hideModal;
+            
+            actions.appendChild(no);
+            actions.appendChild(yes);
+        } else {
+            const ok = document.createElement('button');
+            ok.className = 'btn-action btn-hint';
+            ok.innerText = "OK";
+            ok.onclick = () => {
+                onYes ? onYes() : hideModal();
+            };
+            actions.appendChild(ok);
+        }
+
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    // --- CORE GAME FUNCTIONS ---
+    function startGame(mode, customWords = null) {
+        if (mode === 'default') {
+            gameState.gridSize = 12;
+            gameState.wordCount = 12;
+            gameState.theme = 'random';
+            gameState.currentThemeName = "Quick Play";
+        } else if (mode === 'ai-generated') {
+            gameState.gridSize = parseInt(document.getElementById('opt-difficulty').value);
+            gameState.wordCount = customWords.length;
+            gameState.theme = 'custom';
+        } else {
+            gameState.gridSize = parseInt(document.getElementById('opt-difficulty').value);
+            gameState.wordCount = parseInt(document.getElementById('opt-wordcount').value);
+            gameState.theme = document.getElementById('opt-theme').value;
+            gameState.currentThemeName = gameState.theme.toUpperCase();
+        }
+
+        gameState.hints = 3;
+        gameState.foundCount = 0;
+        gameState.isSelecting = false;
+        document.getElementById('game-title-display').innerText = gameState.currentThemeName;
+        updateStats();
+
+        let wordsToPlace = [];
+        if (customWords) {
+            wordsToPlace = customWords;
+        } else {
+            let pool = [];
+            if (gameState.theme === 'random') {
+                Object.values(WORD_POOLS).forEach(arr => pool.push(...arr));
+            } else {
+                pool = [...WORD_POOLS[gameState.theme]];
+            }
+            pool.sort(() => 0.5 - Math.random());
+            pool = pool.filter(w => w.length <= gameState.gridSize);
+            wordsToPlace = pool.slice(0, gameState.wordCount);
+        }
+
+        hideModal(); 
+        generateGrid(wordsToPlace);
+        renderBoard();
+        showScreen('game-screen');
+    }
+
+    function updateStats() {
+        // Handle Hint Button State (Standard vs Ad Watch)
+        const hintBtn = document.getElementById('btn-hint');
+        
+        if (gameState.hints > 0) {
+            // Normal Hint State
+            document.getElementById('hints-val').innerText = gameState.hints;
+            hintBtn.innerHTML = `Hint`;
+            hintBtn.classList.remove('btn-watch-ad');
+            hintBtn.classList.add('btn-hint');
+        } else {
+            // Ad Watch State
+            hintBtn.innerHTML = `📺 Get Hint`;
+            hintBtn.classList.remove('btn-hint');
+            hintBtn.classList.add('btn-watch-ad');
+            document.getElementById('hints-val').innerText = "0";
+        }
+
+        document.getElementById('progress-text').innerText = `${gameState.foundCount}/${gameState.wordCount}`;
+    }
+
+    function generateGrid(words) {
+        const size = gameState.gridSize;
+        const grid = Array(size).fill(null).map(() => Array(size).fill(''));
+        const placedWords = [];
+
+        words.sort((a, b) => b.length - a.length);
+
+        words.forEach(word => {
+            let placed = false;
+            let attempts = 0;
+            while(!placed && attempts < 100) {
+                const dir = Math.floor(Math.random() * 3); 
+                const dirs = [[0, 1], [1, 0], [1, 1]];
+                const [dr, dc] = dirs[dir];
+                
+                const r = Math.floor(Math.random() * size);
+                const c = Math.floor(Math.random() * size);
+                
+                const endR = r + dr * (word.length - 1);
+                const endC = c + dc * (word.length - 1);
+
+                if(endR < size && endC < size) {
+                    let clear = true;
+                    for(let i=0; i<word.length; i++) {
+                        const char = grid[r + dr*i][c + dc*i];
+                        if(char !== '' && char !== word[i]) {
+                            clear = false; break;
+                        }
+                    }
+                    
+                    if(clear) {
+                        for(let i=0; i<word.length; i++) {
+                            grid[r + dr*i][c + dc*i] = word[i];
+                        }
+                        placedWords.push({ word, found: false, startR: r, startC: c, endR: endR, endC: endC });
+                        placed = true;
+                    }
+                }
+                attempts++;
+            }
+        });
+
+        const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for(let r=0; r<size; r++) {
+            for(let c=0; c<size; c++) {
+                if(grid[r][c] === '') grid[r][c] = alpha[Math.floor(Math.random() * alpha.length)];
+            }
+        }
+
+        gameState.grid = grid;
+        gameState.words = placedWords;
+    }
+
+    function renderBoard() {
+        const container = document.getElementById('grid-container');
+        const wordGrid = document.getElementById('word-grid');
+        
+        container.innerHTML = '';
+        container.style.gridTemplateColumns = `repeat(${gameState.gridSize}, 1fr)`;
+        
+        for(let r=0; r<gameState.gridSize; r++) {
+            for(let c=0; c<gameState.gridSize; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.r = r;
+                cell.dataset.c = c;
+                cell.innerText = gameState.grid[r][c];
+                addInputEvents(cell);
+                container.appendChild(cell);
+            }
+        }
+
+        container.onpointerleave = handleEnd;
+        container.onmouseup = handleEnd;
+        container.ontouchend = handleEnd;
+
+        wordGrid.innerHTML = '';
+        gameState.words.sort((a,b) => a.word.localeCompare(b.word)).forEach(w => {
+            const chip = document.createElement('div');
+            chip.className = 'word-chip';
+            chip.id = `w-${w.word}`;
+            chip.innerText = w.word;
+            wordGrid.appendChild(chip);
+        });
+    }
+
+    function addInputEvents(cell) {
+        const start = (e) => {
+            e.preventDefault(); 
+            gameState.isSelecting = true;
+            gameState.selectionStart = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
+            gameState.selectionEnd = gameState.selectionStart;
+            highlight();
+        };
+        
+        const move = (e) => {
+            if(!gameState.isSelecting) return;
+            let target = e.target;
+            if(e.touches) {
+                const touch = e.touches[0];
+                target = document.elementFromPoint(touch.clientX, touch.clientY);
+            }
+            if(target && target.classList.contains('cell')) {
+                const r = parseInt(target.dataset.r);
+                const c = parseInt(target.dataset.c);
+                if(r !== gameState.selectionEnd.r || c !== gameState.selectionEnd.c) {
+                    gameState.selectionEnd = { r, c };
+                    highlight();
+                }
+            }
+        };
+
+        cell.addEventListener('mousedown', start);
+        cell.addEventListener('touchstart', start, {passive: false});
+        cell.addEventListener('mouseenter', move);
+        document.addEventListener('touchmove', move, {passive: false});
+    }
+
+    function handleEnd() {
+        if(!gameState.isSelecting) return;
+        gameState.isSelecting = false;
+        checkWord();
+        clearHighlight();
+    }
+
+    function highlight() {
+        document.querySelectorAll('.cell.selected').forEach(el => el.classList.remove('selected'));
+        const line = getLine(gameState.selectionStart, gameState.selectionEnd);
+        if(line) {
+            line.forEach(pos => {
+                const el = document.querySelector(`.cell[data-r="${pos.r}"][data-c="${pos.c}"]`);
+                if(el) el.classList.add('selected');
+            });
+        }
+    }
+
+    function clearHighlight() {
+        document.querySelectorAll('.cell.selected').forEach(el => el.classList.remove('selected'));
+    }
+
+    function getLine(start, end) {
+        const points = [];
+        const dr = end.r - start.r;
+        const dc = end.c - start.c;
+        if(dr === 0 && dc === 0) return [{r: start.r, c: start.c}];
+        if(dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return null;
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const stepR = dr === 0 ? 0 : dr / Math.abs(dr);
+        const stepC = dc === 0 ? 0 : dc / Math.abs(dc);
+        for(let i=0; i<=steps; i++) {
+            points.push({ r: start.r + (i*stepR), c: start.c + (i*stepC) });
+        }
+        return points;
+    }
+
+    function checkWord() {
+        const line = getLine(gameState.selectionStart, gameState.selectionEnd);
+        if(!line) return;
+        let str = "";
+        line.forEach(p => str += gameState.grid[p.r][p.c]);
+        const revStr = str.split('').reverse().join('');
+        const match = gameState.words.find(w => !w.found && (w.word === str || w.word === revStr));
+        
+        if(match) {
+            match.found = true;
+            gameState.foundCount++;
+            line.forEach(p => {
+                const el = document.querySelector(`.cell[data-r="${p.r}"][data-c="${p.c}"]`);
+                el.classList.add('found');
+            });
+            const chip = document.getElementById(`w-${match.word}`);
+            chip.classList.add('found');
+            chip.scrollIntoView({behavior: "smooth", block: "nearest"});
+            updateStats();
+            if(gameState.foundCount === gameState.wordCount) {
+                setTimeout(() => {
+                    showModal("VICTORY!", "You found all words! Amazing job.", false, () => showScreen('home-screen'));
+                }, 500);
+            }
+        }
+    }
+
+    // --- REWARDED AD LOGIC ---
+
+    function useHint() {
+        // If user has hints, consume one
+        if(gameState.hints > 0) {
+            const hidden = gameState.words.find(w => !w.found);
+            if(!hidden) return;
+            gameState.hints--;
+            updateStats();
+            const el = document.querySelector(`.cell[data-r="${hidden.startR}"][data-c="${hidden.startC}"]`);
+            el.classList.add('hint-flash');
+            setTimeout(() => el.classList.remove('hint-flash'), 2000);
+        } else {
+            // No hints left? Watch Ad!
+            startAdSimulation();
+        }
+    }
+
+    function startAdSimulation() {
+        const adOverlay = document.getElementById('ad-overlay');
+        const timerEl = document.getElementById('ad-timer');
+        
+        adOverlay.style.display = 'flex';
+        let timeLeft = 3; // Short ad for UX
+        timerEl.innerText = `Reward in ${timeLeft}s`;
+
+        const interval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                timerEl.innerText = `Reward in ${timeLeft}s`;
+            } else {
+                clearInterval(interval);
+                timerEl.innerText = "Reward Earned!";
+                setTimeout(() => {
+                    adOverlay.style.display = 'none';
+                    rewardUser();
+                }, 500);
+            }
+        }, 1000);
+    }
+
+    function rewardUser() {
+        gameState.hints += 3; // Grant 3 hints
+        updateStats();
+        showModal("Reward Unlocked!", "You earned 3 extra hints! 🎯", false);
+    }
+
+</script>
+</body>
+</html>
